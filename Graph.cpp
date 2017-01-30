@@ -130,8 +130,8 @@ int main(int argc, char **argv) {
 
     cout << endl;
 
-    Graph *reference = convert_file_to_graph_input(files[11]);
-    Graph *test = convert_file_to_graph_input(files[12]);
+    Graph *reference = convert_file_to_graph_input(files[reference_file_index]);
+    Graph *test = convert_file_to_graph_input(files[test_file_index]);
     if (reference == NULL || test == NULL)
         return 1;
 
