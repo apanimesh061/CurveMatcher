@@ -9,6 +9,13 @@
 
 using namespace std;
 
+/**
+ * Perform min-max normalisation on the input vector.
+ * This is done so that the data points are scaled between 0 and 1 in
+ * the first quadrant.
+ * @param input     vector<long double>
+ * @return output   vector<long double>
+ */
 vector<long double> normalize(vector<long double> input) {
     vector<long double> output;
     long double max = *max_element(input.begin(), input.end());
@@ -20,6 +27,11 @@ vector<long double> normalize(vector<long double> input) {
     return output;
 }
 
+/**
+ * Returns average of the input vector
+ * @param input     vector<long double>
+ * @return t        long double
+ */
 long double average(vector<long double> input) {
     int n = (int) input.size();
     long double sum = 0.0;
@@ -29,6 +41,13 @@ long double average(vector<long double> input) {
     return t;
 }
 
+/**
+ * This is sort of a high-pass filter that filters values
+ * lower than a threshold t
+ * @param input     vector<long double>
+ * @param t         long double
+ * @return output   vector<long double>
+ */
 vector<long double> apply_threshold(vector<long double> input, long double t) {
     vector<long double> output;
     for (int i = 0; i < input.size(); ++i)
@@ -36,6 +55,15 @@ vector<long double> apply_threshold(vector<long double> input, long double t) {
     return output;
 }
 
+/**
+ * Returns a smoothed version of the input vector.
+ * The smoothing is done using a 1D Gaussion Kernel [1, 4, 6, 4, 1]
+ *
+ * The input is convolved with the kernel successively MAX_ITER times.
+ *
+ * @param input     vector<long double>
+ * @return output   vector<long double>
+ */
 vector<long double> apply_gaussian_filter(vector<long double> input) {
     int current_iter = 0;
     while (current_iter <= MAX_ITER) {
@@ -63,6 +91,17 @@ vector<long double> apply_gaussian_filter(vector<long double> input) {
     return input;
 }
 
+/**
+ * Gets the maximum/minimum sliding window output of an input vector.
+ * The input is first padded on the end and start according to size of
+ * the input window size. The window size will always be odd.
+ *
+ *
+ * @param input                                         vector<long double>
+ * @param w                                             int
+ * @param is_max                                        bool
+ * @return eroded or dilated version of input vector    vector<long double>
+ */
 vector<long double> sliding_window(vector<long double> input, int w, bool is_max) {
     vector<long double> padding((size_t) ((w - 1) / 2));
     long double padding_value = numeric_limits<long double>::infinity();
@@ -103,14 +142,37 @@ vector<long double> sliding_window(vector<long double> input, int w, bool is_max
     return output;
 }
 
+/**
+ * This function implements the Erosion morphological operation
+ * @param input
+ * @param w
+ * @return
+ */
 vector<long double> erosion(vector<long double> input, int w) {
     return sliding_window(input, w, false);
 }
 
+/**
+ * This function implements the Dilation morphological operation
+ * @param input
+ * @param w
+ * @return
+ */
 vector<long double> dilation(vector<long double> input, int w) {
     return sliding_window(input, w, true);
 }
 
+/**
+ * This is done using a filter called Top Hat Filter that ulitizes the
+ * max or min sliding window method.
+ *
+ * structuring_element_size is window size which is used as input window
+ * size in calculating the min/max sliding window output
+ *
+ * @param input
+ * @param structuring_element_size
+ * @return
+ */
 vector<long double> apply_white_tophat_filter(vector<long double> input, int structuring_element_size) {
     vector<long double> result;
     vector<long double> temp = dilation(erosion(input, structuring_element_size), structuring_element_size);
@@ -119,6 +181,17 @@ vector<long double> apply_white_tophat_filter(vector<long double> input, int str
     return result;
 }
 
+/**
+ * This is done using a filter called Top Hat Filter that ulitizes the
+ * max or min sliding window method.
+ *
+ * structuring_element_size is window size which is used as input window
+ * size in calculating the min/max sliding window output
+ *
+ * @param input
+ * @param structuring_element_size
+ * @return
+ */
 vector<long double> apply_black_tophat_filter(vector<long double> input, int structuring_element_size) {
     vector<long double> result;
     vector<long double> temp = erosion(dilation(input, structuring_element_size), structuring_element_size);
@@ -127,15 +200,24 @@ vector<long double> apply_black_tophat_filter(vector<long double> input, int str
     return result;
 }
 
-vector<long double> first_order_derivative(vector<long double> input) {
-    vector<long double> result;
-    result.push_back(0.0);
-    for (int i = 1; i < input.size(); ++i) {
-        result.push_back(input[i] - input[i - 1]);
-    }
-    return result;
-}
-
+/**
+ * Performs a local search on a peak or trough point in order to find any near by maxima/minima.
+ *
+ * When a Gaussian Filter is applied on vector, it results in smoothing which is technically data
+ * loss. So, when we try to find features on the smoothed version we might we having some error
+ * margin.
+ *
+ * Here, start is the index of a feature on the processed version of the input.
+ * We first check if the index is actaully a peak or trough on the original normalized version.
+ * If not, we check all points, within a window size of 10 on left as well as right side of start,
+ * whether or not they are peaks or troughs.
+ *
+ * We return the nearest index of all the 20 indices checked.
+ *
+ * @param input                 vector<long double>
+ * @param start                 int
+ * @return final feature index  int
+ */
 int local_search(vector<long double> input, int start) {
     if ((input[start - 1] > input[start] && input[start + 1] > input[start]) ||
         (input[start - 1] < input[start] && input[start + 1] < input[start]))
@@ -174,6 +256,32 @@ int local_search(vector<long double> input, int start) {
     return nearest;
 }
 
+/**
+ * Calculates the First Order Derivative of a 1D Input
+ * For a 1D input the derivative of successive differences of
+ * elements in input.
+ *
+ * @param input                             vector<long double>
+ * @return first order derivative of input  vector<long double>
+ */
+vector<long double> first_order_derivative(vector<long double> input) {
+    vector<long double> result;
+    result.push_back(0.0);
+    for (int i = 1; i < input.size(); ++i) {
+        result.push_back(input[i] - input[i - 1]);
+    }
+    return result;
+}
+
+/**
+ * Checks for zero crossings on the First Order Derivative output from
+ * first_order_derivative(vector<long double> input)
+ *
+ * Zero crossings tell us that there was a minima or maxima on that index.
+ *
+ * @param input                 vector<long double>
+ * @return vector of indices    vector<int>
+ */
 vector<int> get_peak_indices(vector<long double> input) {
     vector<long double> fod = first_order_derivative(input);
     vector<int> peaks;

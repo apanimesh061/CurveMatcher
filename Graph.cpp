@@ -15,6 +15,11 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> vec) {
     return os;
 }
 
+/**
+ * Using Boost library to read all entries in a directory
+ * @param dir_path
+ * @return
+ */
 vector<string> get_files(string dir_path) {
     path p(dir_path);
     try {
@@ -38,6 +43,12 @@ vector<string> get_files(string dir_path) {
     return {};
 }
 
+/**
+ *
+ * @param str
+ * @param c
+ * @return
+ */
 vector<string> split(const char *str, char c = ',') {
     vector<string> result;
     do {
@@ -49,6 +60,11 @@ vector<string> split(const char *str, char c = ',') {
     return result;
 }
 
+/**
+ * Read a CSV file and convert it to a Graph object.
+ * @param file_path
+ * @return
+ */
 Graph *convert_file_to_graph_input(string file_path) {
     Graph *graph = new Graph();
     std::ifstream file(file_path);
@@ -82,6 +98,12 @@ Graph *convert_file_to_graph_input(string file_path) {
     return graph;
 }
 
+/**
+ * Main Function
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char **argv) {
     if (argc < 2) {
         cerr << "No path to the data directory given!" << endl;
@@ -94,7 +116,7 @@ int main(int argc, char **argv) {
 
     cout << "ID.\tFILENAME" << endl;
     for (int i = 0; i < files.size(); ++i)
-        cout << i + 1 << ".\t" << files[i] << endl;
+        cout << i << ".\t" << files[i] << endl;
     cout << endl;
 
     int reference_file_index;
@@ -108,8 +130,8 @@ int main(int argc, char **argv) {
 
     cout << endl;
 
-    Graph *reference = convert_file_to_graph_input(files[reference_file_index]);
-    Graph *test = convert_file_to_graph_input(files[test_file_index]);
+    Graph *reference = convert_file_to_graph_input(files[11]);
+    Graph *test = convert_file_to_graph_input(files[12]);
     if (reference == NULL || test == NULL)
         return 1;
 

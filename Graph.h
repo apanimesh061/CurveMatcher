@@ -8,6 +8,9 @@
 
 using namespace std;
 
+/**
+ * This class represents an input for processing
+ */
 class Graph {
 private:
     vector<long double> x_axis;
@@ -74,6 +77,11 @@ Graph::~Graph() {
     Graph::y_axes.clear();
 }
 
+/**
+ * Returns true iff x-axis if same for both graphs
+ * @param test  Graph
+ * @return bool
+ */
 bool Graph::is_valid_for_comparison(Graph *test) {
     return (Graph::x_axis == test->getX_axis());
 }
@@ -94,23 +102,40 @@ void Graph::setY_axes_titles(const vector<string> &y_axes_titles) {
     Graph::y_axes_titles = y_axes_titles;
 }
 
+/**
+ * Return all peaks/troughs of the graph
+ * @return
+ */
 const vector<long double> &Graph::getPeaks() const {
     return peaks;
 }
 
+/**
+ * This is core of the whole processing.
+ *
+ * This functions sets all the required features of the input.
+ */
 void Graph::process() {
     vector<long double> y = getY_axes()[Graph::processing_index];
     vector<long double> y_norm = normalize(y);
 
     vector<long double> y_smoothed = apply_gaussian_filter(y_norm);
 
+    /*
+     * This part ensures that the structuring element for top hat filter
+     * if odd in size.
+     */
     int possible_window_size = (int) (0.1 * y_norm.size());
     if (possible_window_size % 2 == 0)
         possible_window_size++;
     possible_window_size = max(possible_window_size, 3);
+
+    // Apply all top hat filter operations
     vector<long double> y_bth = apply_black_tophat_filter(y_smoothed, possible_window_size);
     vector<long double> y_wth = apply_white_tophat_filter(y_smoothed, possible_window_size);
 
+    // Apply threshold to the filtered versions of input.
+    // This will act as High Pass Filter for the input.
     vector<long double> y_bthreshed = apply_threshold(y_bth, average(y_bth));
     vector<long double> y_wthreshed = apply_threshold(y_wth, average(y_wth));
 
@@ -124,10 +149,19 @@ void Graph::process() {
         Graph::peaks.push_back(y[index]);
 }
 
+/**
+ * @param processing_index
+ */
 void Graph::setProcessing_index(int processing_index) {
     Graph::processing_index = processing_index;
 }
 
+/**
+ * This function calculates the relative sqaured error of current graph with
+ * another graph.
+ * @param other         vector<long double>
+ * @return long double (0.0 to 1.0)
+ */
 long double Graph::relative_error(vector<long double> other) {
     vector<long double> ref_y = normalize(Graph::y_axes[Graph::processing_index]);
     vector<long double> other_norm = normalize(other);
@@ -142,6 +176,12 @@ long double Graph::relative_error(vector<long double> other) {
     return error / factor;
 }
 
+/**
+ * Calculates the Pearson Correlation Coefficient of current graph with another graph.
+ *
+ * @param other         vector<long double>
+ * @return long double (-1.0 to 1.0)
+ */
 long double Graph::correlation(vector<long double> other) {
     vector<long double> ref_y = normalize(Graph::y_axes[Graph::processing_index]);
     vector<long double> other_norm = normalize(other);
