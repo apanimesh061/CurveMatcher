@@ -140,10 +140,16 @@ void Graph::process() {
     vector<long double> y_wthreshed = apply_threshold(y_wth, average(y_wth));
 
     vector<int> peak_indices;
-    for (int peak : get_peak_indices(y_bthreshed))
-        peak_indices.push_back(local_search(y_norm, peak));
-    for (int peak : get_peak_indices(y_wthreshed))
-        peak_indices.push_back(local_search(y_norm, peak));
+    for (int peak : get_peak_indices(y_bthreshed)) {
+        if (peak > 0 && peak < y_norm.size() - 1) {
+            peak_indices.push_back(local_search(y_norm, peak));
+        }
+    }
+    for (int peak : get_peak_indices(y_wthreshed)) {
+        if (peak > 0 && peak < y_norm.size() - 1) {
+            peak_indices.push_back(local_search(y_norm, peak));
+        }
+    }
 
     for (auto index : peak_indices)
         Graph::peaks.push_back(y[index]);
