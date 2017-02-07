@@ -229,11 +229,11 @@ int local_search(vector<long double> input, int start) {
     int diff = numeric_limits<int>::max();
 
     int left_end = start - local_search_window;
-    while (current > left_end) {
+    while (current > left_end && current > 0 && current < input.size() - 1) {
         if ((input[current - 1] > input[current] && input[current + 1] > input[current]) ||
             (input[current - 1] < input[current] && input[current + 1] < input[current])) {
             if ((abs(current - start) < diff)) {
-                diff = (int) abs(current - start);
+                diff = (int)abs(current - start);
                 nearest = current;
             }
         }
@@ -242,11 +242,11 @@ int local_search(vector<long double> input, int start) {
 
     current = start;
     int right_end = start + local_search_window;
-    while (current < right_end) {
+    while (current < right_end && current > 0 && current < input.size() - 1) {
         if ((input[current - 1] > input[current] && input[current + 1] > input[current]) ||
             (input[current - 1] < input[current] && input[current + 1] < input[current])) {
             if ((abs(current - start) < diff)) {
-                diff = (int) abs(current - start);
+                diff = (int)abs(current - start);
                 nearest = current;
             }
         }
